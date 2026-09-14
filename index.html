@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ЖИ бойынша онлайн рефлексия</title>
+    <title>ЖИ бойынша рефлексия</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f7f6; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
@@ -63,47 +63,37 @@
     </div>
 
     <script>
-        // Ашық онлайн API (Өз атыңызды уникалды қылу үшін арнайы кілт қойылды)
-        const NAMESPACE = "reflection_school_ai_2026_vote";
+        // Сіз жіберген Google Apps Script сілтемесі:
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbza2JAbuKrPjF4lpJaxPTl_6kPbjfz7XYiyh6QWXfqcWyNJ8LcNNy9j71Xua7c2JS-czQ/exec";
 
-        // Онлайн серверден 3 түстің дауыстарын алу
         async function fetchVotes() {
             try {
-                let resG = await fetch(`https://api.countapi.xyz/get/${NAMESPACE}/green`).then(r => r.json());
-                let resY = await fetch(`https://api.countapi.xyz/get/${NAMESPACE}/yellow`).then(r => r.json());
-                let resR = await fetch(`https://api.countapi.xyz/get/${NAMESPACE}/red`).then(r => r.json());
-
-                let green = resG.value || 0;
-                let yellow = resY.value || 0;
-                let red = resR.value || 0;
-
-                updateUI(green, yellow, red);
-            } catch (err) {
-                console.log("Деректерді алу мүмкін болмады:", err);
+                let res = await fetch(GOOGLE_SCRIPT_URL);
+                let data = await res.json();
+                updateUI(data.green, data.yellow, data.red);
+            } catch (e) {
+                console.log("Деректерді алу қатесі:", e);
             }
         }
 
-        // Дауыс қосу функциясы (Серверде +1 болады)
         async function vote(color) {
             try {
-                await fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${color}`);
-                fetchVotes(); // Дауыс берілген бойда экранды жаңарту
-            } catch (err) {
-                console.log("Дауыс берілмеді:", err);
+                let res = await fetch(GOOGLE_SCRIPT_URL + "?action=vote&type=" + color);
+                let data = await res.json();
+                updateUI(data.green, data.yellow, data.red);
+            } catch (e) {
+                console.log("Дауыс беру қатесі:", e);
             }
         }
 
-        // Дауысты сброс жасау (0-ге түсіру)
         async function resetVotes() {
-            if (confirm("Барлық оқушының дауыстарын 0-ге түсіресіз бе?")) {
-                await fetch(`https://api.countapi.xyz/set/${NAMESPACE}/green?value=0`);
-                await fetch(`https://api.countapi.xyz/set/${NAMESPACE}/yellow?value=0`);
-                await fetch(`https://api.countapi.xyz/set/${NAMESPACE}/red?value=0`);
-                fetchVotes();
+            if (confirm("Барлық оқушылардың дауыстарын 0-ге түсіресіз бе?")) {
+                let res = await fetch(GOOGLE_SCRIPT_URL + "?action=reset");
+                let data = await res.json();
+                updateUI(data.green, data.yellow, data.red);
             }
         }
 
-        // График пен пайыздарды есептеу
         function updateUI(green, yellow, red) {
             let total = green + yellow + red;
 
@@ -122,11 +112,11 @@
             document.getElementById('total-votes').innerText = 'Жалпы дауыс саны: ' + total;
         }
 
-        // Бет жүктелгенде онлайн деректерді тексеру
+        // Бет жүктелгенде дауыстарды алу
         fetchVotes();
 
-        // 2 секунд сайын онлайн дауыстарды автоматты түрде жаңартып тұру
-        setInterval(fetchVotes, 2000);
+        // Әр 3 секунд сайын дауыстарды онлайн жаңартып тұру
+        setInterval(fetchVotes, 3000);
     </script>
 </body>
 </html>
