@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ЖИ бойынша рефлексия (Онлайн)</title>
+    <title>ЖИ бойынша онлайн рефлексия</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f7f6; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
@@ -63,57 +63,53 @@
     </div>
 
     <script>
-        // Онлайн дерекқор сілтемесі (Сіз үшін арнайы дайындалды)
-        const BIN_ID = '65e9d224dc74654018afc9f8'; 
-        const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+        // Ашық онлайн API (Өз атыңызды уникалды қылу үшін арнайы кілт қойылды)
+        const NAMESPACE = "reflection_school_ai_2026_vote";
 
-        let currentVotes = { green: 0, yellow: 0, red: 0 };
-
-        // 1. Онлайн дерекқордан дауыстарды жүктеу
-        async function loadVotes() {
+        // Онлайн серверден 3 түстің дауыстарын алу
+        async function fetchVotes() {
             try {
-                let response = await fetch(API_URL + '/latest');
-                let data = await response.json();
-                currentVotes = data.record || { green: 0, yellow: 0, red: 0 };
-                updateChart(currentVotes);
-            } catch (e) {
-                console.log("Жүктеу қатесі:", e);
+                let resG = await fetch(`https://api.countapi.xyz/get/${NAMESPACE}/green`).then(r => r.json());
+                let resY = await fetch(`https://api.countapi.xyz/get/${NAMESPACE}/yellow`).then(r => r.json());
+                let resR = await fetch(`https://api.countapi.xyz/get/${NAMESPACE}/red`).then(r => r.json());
+
+                let green = resG.value || 0;
+                let yellow = resY.value || 0;
+                let red = resR.value || 0;
+
+                updateUI(green, yellow, red);
+            } catch (err) {
+                console.log("Деректерді алу мүмкін болмады:", err);
             }
         }
 
-        // 2. Дауыс беру функциясы
-        async function vote(option) {
-            currentVotes[option] = (currentVotes[option] || 0) + 1;
-            updateChart(currentVotes);
-
-            // Серверге жаңа дауысты сақтау
-            await fetch(API_URL, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(currentVotes)
-            });
+        // Дауыс қосу функциясы (Серверде +1 болады)
+        async function vote(color) {
+            try {
+                await fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${color}`);
+                fetchVotes(); // Дауыс берілген бойда экранды жаңарту
+            } catch (err) {
+                console.log("Дауыс берілмеді:", err);
+            }
         }
 
-        // 3. Дауыстарды 0-ге түсіру
+        // Дауысты сброс жасау (0-ге түсіру)
         async function resetVotes() {
-            if (confirm("Барлық оқушының дауысын өшіріп, 0-ге түсіресіз бе?")) {
-                currentVotes = { green: 0, yellow: 0, red: 0 };
-                updateChart(currentVotes);
-                await fetch(API_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(currentVotes)
-                });
+            if (confirm("Барлық оқушының дауыстарын 0-ге түсіресіз бе?")) {
+                await fetch(`https://api.countapi.xyz/set/${NAMESPACE}/green?value=0`);
+                await fetch(`https://api.countapi.xyz/set/${NAMESPACE}/yellow?value=0`);
+                await fetch(`https://api.countapi.xyz/set/${NAMESPACE}/red?value=0`);
+                fetchVotes();
             }
         }
 
-        // 4. Графикті жаңарту
-        function updateChart(votes) {
-            let total = votes.green + votes.yellow + votes.red;
+        // График пен пайыздарды есептеу
+        function updateUI(green, yellow, red) {
+            let total = green + yellow + red;
 
-            let greenPercent = total === 0 ? 0 : Math.round((votes.green / total) * 100);
-            let yellowPercent = total === 0 ? 0 : Math.round((votes.yellow / total) * 100);
-            let redPercent = total === 0 ? 0 : Math.round((votes.red / total) * 100);
+            let greenPercent = total === 0 ? 0 : Math.round((green / total) * 100);
+            let yellowPercent = total === 0 ? 0 : Math.round((yellow / total) * 100);
+            let redPercent = total === 0 ? 0 : Math.round((red / total) * 100);
 
             document.getElementById('green-bar').style.height = greenPercent + '%';
             document.getElementById('yellow-bar').style.height = yellowPercent + '%';
@@ -126,11 +122,11 @@
             document.getElementById('total-votes').innerText = 'Жалпы дауыс саны: ' + total;
         }
 
-        // Бет ашылғанда онлайн дауыстарды алу
-        loadVotes();
+        // Бет жүктелгенде онлайн деректерді тексеру
+        fetchVotes();
 
-        // Әр 3 секунд сайын дауыстарды онлайн жаңартып отыру
-        setInterval(loadVotes, 3000);
+        // 2 секунд сайын онлайн дауыстарды автоматты түрде жаңартып тұру
+        setInterval(fetchVotes, 2000);
     </script>
 </body>
 </html>
