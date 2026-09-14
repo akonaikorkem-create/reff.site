@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЖИ бойынша рефлексия</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Түстер графигінің экраны */
+        .chart-screen {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            width: 100%;
+            height: 300px;
+            background-color: #eef2f5;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            margin-bottom: 40px;
+        }
+
+        .bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+            width: 80px;
+        }
+
+        .bar-percent {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .bar {
+            width: 100%;
+            height: 0%;
+            border-radius: 8px 8px 0 0;
+            transition: height 0.5s ease-in-out;
+            min-height: 5px;
+        }
+
+        .green-bar { background-color: #2ecc71; }
+        .yellow-bar { background-color: #f1c40f; }
+        .red-bar { background-color: #e74c3c; }
+
+        .bar-label {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Түймелер жағы */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .btn {
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.1s, opacity 0.2s;
+            text-align: left;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-green { background-color: #2ecc71; }
+        .btn-yellow { background-color: #f39c12; }
+        .btn-red { background-color: #e74c3c; }
+
+        .total-votes {
+            margin-top: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        /* Құпия Reset батырмасының стилі */
+        .btn-reset {
+            margin-top: 25px;
+            background: transparent;
+            border: 1px solid #ccc;
+            color: #888;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-reset:hover {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>ЖИ (Жасанды интеллект) құралдарын қолдану рефлексиясы</h1>
+
+        <!-- Ортадағы түсті экран (График) -->
+        <div class="chart-screen">
+            <!-- Жасыл баған -->
+            <div class="bar-wrapper">
+                <div class="bar-percent" id="green-percent">0%</div>
+                <div class="bar green-bar" id="green-bar"></div>
+                <div class="bar-label" style="color: #2ecc71;">Жасыл</div>
+            </div>
+
+            <!-- Сары баған -->
+            <div class="bar-wrapper">
+                <div class="bar-percent" id="yellow-percent">0%</div>
+                <div class="bar yellow-bar" id="yellow-bar"></div>
+                <div class="bar-label" style="color: #f39c12;">Сары</div>
+            </div>
+
+            <!-- Қызыл баған -->
+            <div class="bar-wrapper">
+                <div class="bar-percent" id="red-percent">0%</div>
+                <div class="bar red-bar" id="red-bar"></div>
+                <div class="bar-label" style="color: #e74c3c;">Қызыл</div>
+            </div>
+        </div>
+
+        <!-- Түсініктеме нұсқалары (Дауыс беру батырмалары) -->
+        <div class="options">
+            <button class="btn btn-green" onclick="vote('green')">
+                🟢 ЖИ-ді еркін қолданамын
+            </button>
+            <button class="btn btn-yellow" onclick="vote('yellow')">
+                🟡 Қолданамын, бірақ әлі де үйренуім керек
+            </button>
+            <button class="btn btn-red" onclick="vote('red')">
+                🔴 ЖИ құралдарын енді үйреніп жүрмін
+            </button>
+        </div>
+
+        <div class="total-votes" id="total-votes">Жалпы дауыс саны: 0</div>
+
+        <!-- Құпия сброс батырмасы -->
+        <button class="btn-reset" onclick="resetVotes()">🔄 Дауыстарды тазалау (Reset)</button>
+    </div>
+
+    <script>
+        // Базадан сақталған дауысты алу немесе 0-ден бастау
+        let votes = JSON.parse(localStorage.getItem('reflection_votes')) || {
+            green: 0,
+            yellow: 0,
+            red: 0
+        };
+
+        // Бет ашылғанда бірден экранды жаңарту
+        updateChart();
+
+        function vote(option) {
+            votes[option]++;
+            localStorage.setItem('reflection_votes', JSON.stringify(votes));
+            updateChart();
+        }
+
+        // Дауыстарды 0-ге түсіретін функция
+        function resetVotes() {
+            let confirmReset = confirm("Барлық дауыстарды өшіріп, қайтадан 0-ге түсіргіңіз келе ме?");
+            if (confirmReset) {
+                votes = { green: 0, yellow: 0, red: 0 };
+                localStorage.removeItem('reflection_votes');
+                updateChart();
+            }
+        }
+
+        function updateChart() {
+            let total = votes.green + votes.yellow + votes.red;
+
+            let greenPercent = total === 0 ? 0 : Math.round((votes.green / total) * 100);
+            let yellowPercent = total === 0 ? 0 : Math.round((votes.yellow / total) * 100);
+            let redPercent = total === 0 ? 0 : Math.round((votes.red / total) * 100);
+
+            document.getElementById('green-bar').style.height = greenPercent + '%';
+            document.getElementById('yellow-bar').style.height = yellowPercent + '%';
+            document.getElementById('red-bar').style.height = redPercent + '%';
+
+            document.getElementById('green-percent').innerText = greenPercent + '%';
+            document.getElementById('yellow-percent').innerText = yellowPercent + '%';
+            document.getElementById('red-percent').innerText = redPercent + '%';
+
+            document.getElementById('total-votes').innerText = 'Жалпы дауыс саны: ' + total;
+        }
+    </script>
+</body>
+</html>
